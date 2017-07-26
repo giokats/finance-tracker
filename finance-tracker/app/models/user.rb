@@ -3,4 +3,20 @@ class User < ActiveRecord::Base
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
+  has_many :user_stocks
+  has_many :stocks, through: :user_stocks
+  
+  def can_add_stock?(ticker_sympol)
+    under_stock_limit? && !stock_already_added?(ticker_sympol)
+  end
+  
+  def under_stock_limit?
+    (user_stocks.count < 10)
+  end
+  
+  def stock_already_added?(ticker_sympol)
+    stock = Stock.find_by_ticker(ticker_sympol)
+    return false unless stock
+    user_stocks.where(stock_id: stock.id).exists?
+  end
 end
